@@ -1,50 +1,51 @@
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.Queue;
+import java.util.*;
 
 public class DijkstraSearch<V> extends Search<V> {
-    public DijkstraSearch(WeightedGraph<V> graph, Vertex<V> source) {
-        super(graph, source);
+    private Map<Vertex<V>, Double> distance;
+    private Map<Vertex<V>, Vertex<V>> parent;
+
+    public DijkstraSearch(WeightedGraph<V> graph) {
+        super(graph);
+        this.distance = new HashMap<>();
+        this.parent = new HashMap<>();
     }
 
-    @Override
-    public List<Vertex<V>> search() {
-        List<Vertex<V>> path = new ArrayList<>();
-        Map<Vertex<V>, Double> distances = new HashMap<>();
-        Map<Vertex<V>, Vertex<V>> parentMap = new HashMap<>();
-        Queue<Vertex<V>> priorityQueue = new PriorityQueue<>((v1, v2) -> Double.compare(distances.get(v1), distances.get(v2)));
+    public void dijkstra(Vertex<V> startVertex) {
+        PriorityQueue<Vertex<V>> queue = new PriorityQueue<>(Comparator.comparingDouble(distance::get));
+        distance.put(startVertex, 0.0);
+        queue.add(startVertex);
 
-        for (Vertex<V> vertex : graph.getAdjacencyList().keySet()) {
-            distances.put(vertex, Double.MAX_VALUE);
-        }
+        while (!queue.isEmpty()) {
+            Vertex<V> currentVertex = queue.poll();
 
-        distances.put(source, 0.0);
-        priorityQueue.add(source);
+            List<Edge<V>> edges = graph.getEdges(currentVertex);
+            for (Edge<V> edge : edges) {
+                Vertex<V> destination = edge.getDest();
+                double newDistance = distance.get(currentVertex) + edge.getWeight();
 
-        while (!priorityQueue.isEmpty()) {
-            Vertex<V> currentVertex = priorityQueue.poll();
-
-            for (Vertex<V> adjacentVertex : graph.getAdjacentVertices(currentVertex)) {
-                double newDistance = distances.get(currentVertex) + currentVertex.getAdjacentVertices().get(adjacentVertex);
-
-                if (newDistance < distances.get(adjacentVertex)) {
-                    priorityQueue.remove(adjacentVertex);
-                    distances.put(adjacentVertex, newDistance);
-                    parentMap.put(adjacentVertex, currentVertex);
-                    priorityQueue.add(adjacentVertex);
+                if (!distance.containsKey(destination) || newDistance < distance.get(destination)) {
+                    queue.remove(destination);
+                    distance.put(destination, newDistance);
+                    parent.put(destination, currentVertex);
+                    queue.add(destination);
                 }
             }
         }
+    }
 
-        Vertex<V> current = graph.getAdjacencyList().keySet().stream().filter(v -> v.equals(source)).findFirst().orElse(null);
-        while (current != null) {
-            path.add(0, current);
-            current = parentMap.get(current);
+    public double getShortestDistance(Vertex<V> destination) {
+        return distance.getOrDefault(destination, Double.POSITIVE_INFINITY);
+    }
+
+    public List<Vertex<V>> getShortestPath(Vertex<V> destination) {
+        List<Vertex<V>> path = new ArrayList<>();
+
+        while (destination != null) {
+            path.add(destination);
+            destination = parent.get(destination);
         }
 
+        Collections.reverse(path);
         return path;
     }
 }
