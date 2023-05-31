@@ -1,33 +1,33 @@
 import java.util.*;
 
 public class BreadthFirstSearch<V> extends Search<V> {
-    public BreadthFirstSearch(WeightedGraph<V> graph, Vertex<V> source) {
-        super(graph, source);
+    private Set<Vertex<V>> visited;
+    private Map<Vertex<V>, Vertex<V>> parent;
+
+    public BreadthFirstSearch(WeightedGraph<V> graph) {
+        super(graph);
+        this.visited = new HashSet<>();
+        this.parent = new HashMap<>();
     }
 
-    @Override
-    public List<Vertex<V>> search() {
-        List<Vertex<V>> path = new ArrayList<>();
-        Queue<Vertex<V>> queue = new ArrayDeque<>();
-        Set<Vertex<V>> visited = new HashSet<>();
-        Map<Vertex<V>, Vertex<V>> parentMap = new HashMap<>();
-
-        queue.add(source);
-        visited.add(source);
+    public void bfs(Vertex<V> startVertex) {
+        Queue<Vertex<V>> queue = new LinkedList<>();
+        queue.add(startVertex);
+        visited.add(startVertex);
 
         while (!queue.isEmpty()) {
             Vertex<V> currentVertex = queue.poll();
-            path.add(currentVertex);
+            System.out.println("Visited: " + currentVertex.getData());
 
-            for (Vertex<V> adjacentVertex : graph.getAdjacentVertices(currentVertex)) {
-                if (!visited.contains(adjacentVertex)) {
-                    queue.add(adjacentVertex);
-                    visited.add(adjacentVertex);
-                    parentMap.put(adjacentVertex, currentVertex);
+            List<Edge<V>> edges = graph.getEdges(currentVertex);
+            for (Edge<V> edge : edges) {
+                Vertex<V> destination = edge.getDest();
+                if (!visited.contains(destination)) {
+                    queue.add(destination);
+                    visited.add(destination);
+                    parent.put(destination, currentVertex);
                 }
             }
         }
-
-        return path;
     }
 }
